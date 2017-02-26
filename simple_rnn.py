@@ -19,7 +19,7 @@ def update_state(xk, sk, wx, wRec):
 def forward_states(X, wx, wRec):
     S = np.zeros((X.shape[0], X.shape[1] + 1))
     for k in range(X.shape[1]):
-        S[:, k + 1] = update_state(X[:, k], S[:, k - 1], wx, wRec)
+        S[:, k + 1] = update_state(X[:, k], S[:, k], wx, wRec)
     return S
 
 
