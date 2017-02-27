@@ -116,6 +116,12 @@ def main():
     W_opt = optimize_rprop(X, t, W, eta_p=1.5, eta_n=0.5)
     print('Final weights are: wx = {0}, wRec = {1}'.format(W_opt[0], W_opt[1]))
 
+    # The final model is tested on a test sequence.
+    test_input = np.asmatrix([[0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1]])
+    test_output = forward_states(test_input, W_opt[0], W_opt[1])[:, -1]
+    print('Target output: {:d} vs Model output: {:.2f}'.format(
+        test_input.sum(), test_output[0]))
+
 
 if __name__ == '__main__':
     main()
