@@ -65,6 +65,31 @@ def grad_check(X, t, params, backprop_grads, grad_over_time, eps=1e-7):
     print('No gradient errors found')
 
 
+def update_rprop(X, t, W, W_delta, W_prev_sign, eta_p, eta_n):
+    S = forward_states(X, W[0], W[1])
+    grad_out = output_gradient(S[:, -1], t)
+    W_grads, _ = backward_gradient(X, S, grad_out, W[1])
+    W_sign = np.sign(W_grads)
+    for i, _ in enumerate(W):
+        if W_sign[i] == W_prev_sign[i]:
+            W_delta[i] *= eta_p
+        elif W_sign[i] != W_prev_sign[i]:
+            W_delta[i] *= eta_n
+    return W_delta, W_sign
+
+
+def optimize_rprop(X, t, W, eta_p=1.5, eta_n=0.5):
+    W_delta = [0.001, 0.001]  # weight update value
+    W_sign = [0, 0]  # previous sign of w
+
+    n_iter = 500
+    for i in range(n_iter):
+        W_delta, W_sign = update_rprop(X, t, W, W_delta, W_sign, eta_p, eta_n)
+        for i, _ in enumerate(W):
+            W[i] -= W_sign[i] * W_delta[i]
+    return W
+
+
 def main():
     # Input data consists of 20 binary seqences of 10 timestamps
     X = np.zeros((n_samples, seq_len), dtype=np.int)
@@ -85,6 +110,11 @@ def main():
 
     # gradient check
     grad_check(X, t, params, backprop_grads, grad_over_time, eps=1e-7)
+
+    # Rprop optimization
+    W = [-1.5, 2]
+    W_opt = optimize_rprop(X, t, W, eta_p=1.5, eta_n=0.5)
+    print('Final weights are: wx = {0}, wRec = {1}'.format(W_opt[0], W_opt[1]))
 
 
 if __name__ == '__main__':
