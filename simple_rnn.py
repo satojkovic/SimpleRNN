@@ -6,6 +6,9 @@ RNN basics:
 """
 
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.colors import LogNorm
+from matplotlib import cm
 
 # Input parameters
 n_samples = 20
@@ -78,7 +81,7 @@ def update_rprop(X, t, W, W_delta, W_prev_sign, eta_p, eta_n):
     return W_delta, W_sign
 
 
-def optimize_rprop(X, t, W, eta_p=1.5, eta_n=0.5):
+def optimize_rprop(X, t, W, W_for_plot, eta_p=1.5, eta_n=0.5):
     W_delta = [0.001, 0.001]  # weight update value
     W_sign = [0, 0]  # previous sign of w
 
@@ -87,7 +90,46 @@ def optimize_rprop(X, t, W, eta_p=1.5, eta_n=0.5):
         W_delta, W_sign = update_rprop(X, t, W, W_delta, W_sign, eta_p, eta_n)
         for i, _ in enumerate(W):
             W[i] -= W_sign[i] * W_delta[i]
+        W_for_plot.append((W[0], W[1]))
     return W
+
+
+def get_cost_surface(w1_min, w1_max, w2_min, w2_max, n_weights, cost_func):
+    w1 = np.linspace(w1_min, w1_max, num=n_weights)
+    w2 = np.linspace(w2_min, w2_max, num=n_weights)
+    ws1, ws2 = np.meshgrid(w1, w2)
+    cost_ws = np.zeros((n_weights, n_weights))
+    for i in range(n_weights):
+        for j in range(n_weights):
+            cost_ws[i, j] = cost_func(ws1[i, j], ws2[i, j])
+    return ws1, ws2, cost_ws
+
+
+def plot_surface(ax, ws1, ws2, cost_ws):
+    surf = ax.contourf(
+        ws1,
+        ws2,
+        cost_ws,
+        levels=np.logspace(-0.2, 8, 30),
+        cmap=cm.pink,
+        norm=LogNorm())
+    ax.set_xlabel('$w_{in}$', fontsize=15)
+    ax.set_ylabel('$w_{rec}$', fontsize=15)
+    return surf
+
+
+def plot_optimization(W_for_plot, cost_func):
+    fig = plt.figure(figsize=(10, 4))
+
+    ws1, ws2 = zip(*W_for_plot)
+    ax_1 = fig.add_subplot(1, 2, 1)
+    ws1_1, ws2_1, cost_ws_1 = get_cost_surface(-3, 3, -3, 3, 100, cost_func)
+    surf_1 = plot_surface(ax_1, ws1_1, ws2_1, cost_ws_1 + 1)
+    ax_1.plot(ws1, ws2, 'b.')
+    ax_1.set_xlim([-3, 3])
+    ax_1.set_ylim([-3, 3])
+
+    plt.show()
 
 
 def main():
@@ -113,8 +155,13 @@ def main():
 
     # Rprop optimization
     W = [-1.5, 2]
-    W_opt = optimize_rprop(X, t, W, eta_p=1.5, eta_n=0.5)
+    W_for_plot = [(W[0], W[1])]
+    W_opt = optimize_rprop(X, t, W, W_for_plot, eta_p=1.5, eta_n=0.5)
     print('Final weights are: wx = {0}, wRec = {1}'.format(W_opt[0], W_opt[1]))
+
+    # plot the cost surface
+    plot_optimization(W_for_plot,
+                      lambda w1, w2: cost(forward_states(X, w1, w2)[:, -1], t))
 
     # The final model is tested on a test sequence.
     test_input = np.asmatrix([[0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1]])
