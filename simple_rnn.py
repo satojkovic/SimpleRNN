@@ -129,6 +129,13 @@ def plot_optimization(W_for_plot, cost_func):
     ax_1.set_xlim([-3, 3])
     ax_1.set_ylim([-3, 3])
 
+    ax_2 = fig.add_subplot(1, 2, 2)
+    ws2_1, ws2_2, cost_ws_2 = get_cost_surface(0, 2, 0, 2, 100, cost_func)
+    surf_2 = plot_surface(ax_2, ws2_1, ws2_2, cost_ws_2 + 1)
+    ax_2.plot(ws1, ws2, 'b.')
+    ax_2.set_xlim([0, 2])
+    ax_2.set_ylim([0, 2])
+
     plt.show()
 
 
